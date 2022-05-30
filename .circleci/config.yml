@@ -1,28 +1,40 @@
 version: 2.1
 
+yaml_anchors:
+  build_one: &build_one
+    steps:
+      - checkout
+      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
+      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
+
 jobs:
   build_arm64:
     machine:
       image: ubuntu-2004:current
     resource_class: arm.medium
-    steps:
-      - checkout
-      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
-      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
-      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
+    <<: *build_one
+#    steps:
+#      - checkout
+#      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+#      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
+#      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
 
   build_amd64:
     machine:
       image: ubuntu-2004:current
-    steps:
-      - checkout
-      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
-      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
-      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
+    resource_class: medium
+    <<: *build_one
+#    steps:
+#      - checkout
+#      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+#      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
+#      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
 
   build_manifest:
     machine:
       image: ubuntu-2004:current
+    resource_class: small
     steps:
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
       - run: docker manifest create codingbadly/multi-arch-fuff:latest >
