@@ -7,6 +7,7 @@ yaml_anchors:
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
       - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
       - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
+      - run: docker push codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture)
 
 jobs:
   build_arm64:
@@ -40,6 +41,7 @@ jobs:
       - run: docker manifest create codingbadly/multi-arch-fuff:latest >
           --amend codingbadly/multi-arch-fuff:manifest-arm64
           --amend codingbadly/multi-arch-fuff:manifest-amd64
+      - run: docker manifest push codingbadly/multi-arch-fuff:latest
 
 workflows:
   build_all:
