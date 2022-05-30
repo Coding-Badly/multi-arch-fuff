@@ -8,8 +8,8 @@ jobs:
     steps:
       - checkout
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
-#      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
-#      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
+      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
+      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
 
   build_amd64:
     machine:
@@ -17,12 +17,17 @@ jobs:
     steps:
       - checkout
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
+      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
 
   build_manifest:
     machine:
       image: ubuntu-2004:current
     steps:
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+      - run: docker manifest create codingbadly/multi-arch-fuff:latest >
+          --amend codingbadly/multi-arch-fuff:manifest-arm64
+          --amend codingbadly/multi-arch-fuff:manifest-amd64
 
 workflows:
   build_all:
