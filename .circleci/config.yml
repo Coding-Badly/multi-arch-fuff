@@ -1,0 +1,19 @@
+version: 2.1
+
+jobs:
+  build_arm64:
+    machine:
+      image: ubuntu-2204:2022.04.1
+    resource_class: arm.medium
+    steps:
+      - checkout
+  build_amd64:
+    steps:
+      - checkout
+
+workflows:
+  build_all:
+    jobs:
+      - build_arm64
+      - build_amd64
+
