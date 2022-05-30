@@ -21,9 +21,9 @@ jobs:
 workflows:
   build_all:
     jobs:
-      - build_arm64
+      - build_arm64:
           context:
             - docker-hub
-      - build_amd64
+      - build_amd64:
           context:
             - docker-hub
