@@ -18,11 +18,11 @@ jobs:
       - checkout
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
 
-  build_manifest:
-    machine:
-      image: ubuntu-2004:current
-    steps:
-      - run:
+#  build_manifest:
+#    machine:
+#      image: ubuntu-2004:current
+#    steps:
+#      - run:
 
 workflows:
   build_all:
