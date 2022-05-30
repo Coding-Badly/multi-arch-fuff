@@ -2,8 +2,8 @@ version: 2.1
 
 jobs:
   build_arm64:
-    machine:
-      image: ubuntu-2204:2022.04.1
+#    machine:
+#      image: ubuntu-2204:2022.04.1
     resource_class: arm.medium
     steps:
       - checkout
