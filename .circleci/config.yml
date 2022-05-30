@@ -7,8 +7,8 @@ jobs:
     resource_class: arm.medium
     steps:
       - checkout
-      - docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
-      - docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
+      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
+      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
 
 #  build_amd64:
 #    steps:
