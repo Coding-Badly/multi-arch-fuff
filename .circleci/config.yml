@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build_arm64:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:current
     resource_class: arm.medium
     steps:
       - checkout
