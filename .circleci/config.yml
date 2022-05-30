@@ -7,15 +7,19 @@ jobs:
     resource_class: arm.medium
     steps:
       - checkout
-      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
-      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
+      - docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+#      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
+#      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
 
-#  build_amd64:
-#    steps:
-#      - checkout
+  build_amd64:
+    machine:
+      image: ubuntu-2004:current
+    steps:
+      - checkout
+      - docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
 
 workflows:
   build_all:
     jobs:
       - build_arm64
-#      - build_amd64
+      - build_amd64
