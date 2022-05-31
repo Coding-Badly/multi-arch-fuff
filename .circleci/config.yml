@@ -5,16 +5,20 @@ yaml_anchors:
     steps:
       - checkout
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
-      - run: echo "export DOCKER_ARCHITECTURE=$(dpkg --print-architecture)" >> $BASH_ENV
-      - run: printf "\n>%s<\n\n" ${DOCKER_ARCHITECTURE}
-      - run: echo "export DOCKER_IMAGE=codingbadly/multi-arch-fuff:${DOCKER_ARCHITECTURE}" >> $BASH_ENV
-      - run: printf "\n>%s<\n\n" ${DOCKER_IMAGE}
-      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:$(dpkg --print-architecture) .
-      - run: docker image inspect codingbadly/multi-arch-fuff:$(dpkg --print-architecture) | grep "Architecture"
-      - run: echo "export DOCKER_TAG=$(docker run -it --rm --entrypoint /bin/sh codingbadly/multi-arch-fuff -c 'printf $RUST_VERSION')" >> $BASH_ENV
-      - run: printf "\n>%s<\n\n" ${DOCKER_TAG}
-      - run: cat $BASH_ENV
-      - run: docker push codingbadly/multi-arch-fuff:$(dpkg --print-architecture)
+      - run: docker build --force-rm -t multi-arch-fuff-stage .
+      - run: docker image inspect multi-arch-fuff-stage | grep "Architecture"
+      - run: echo "export TARGET_ARCHITECTURE=$(dpkg --print-architecture)" >> $BASH_ENV
+      - run: printf "\n>%s<\n\n" ${TARGET_ARCHITECTURE}
+      - run: echo "export RUST_VERSION=$(docker run -it --rm --entrypoint /bin/sh multi-arch-fuff-stage -c 'printf $RUST_VERSION')" >> $BASH_ENV
+      - run: printf "\n>%s<\n\n" ${RUST_VERSION}
+      - run: echo "export DOCKER_IMAGE_1=codingbadly/multi-arch-fuff:${RUST_VERSION}-${TARGET_ARCHITECTURE}" >> $BASH_ENV
+      - run: printf "\n>%s<\n\n" ${DOCKER_IMAGE_1}
+      - run: echo "export DOCKER_IMAGE_2=codingbadly/multi-arch-fuff:latest-${TARGET_ARCHITECTURE}" >> $BASH_ENV
+      - run: printf "\n>%s<\n\n" ${DOCKER_IMAGE_2}
+      - run: docker tag multi-arch-fuff-stage ${DOCKER_IMAGE_1}
+      - run: docker tag multi-arch-fuff-stage ${DOCKER_IMAGE_2}
+      - run: docker push ${DOCKER_IMAGE_1}
+      - run: docker push ${DOCKER_IMAGE_2}
 
 jobs:
   build_arm64:
@@ -22,33 +26,23 @@ jobs:
       image: ubuntu-2004:current
     resource_class: arm.medium
     <<: *build_one
-#    steps:
-#      - checkout
-#      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
-#      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
-#      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
 
   build_amd64:
     machine:
       image: ubuntu-2004:current
     resource_class: medium
     <<: *build_one
-#    steps:
-#      - checkout
-#      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
-#      - run: docker build --force-rm -t codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) .
-#      - run: docker image inspect codingbadly/multi-arch-fuff:manifest-$(dpkg --print-architecture) | grep "Architecture"
 
-  build_manifest:
-    machine:
-      image: ubuntu-2004:current
-    resource_class: small
-    steps:
-      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
-      - run: docker manifest create codingbadly/multi-arch-fuff:latest >
-          --amend codingbadly/multi-arch-fuff:arm64
-          --amend codingbadly/multi-arch-fuff:amd64
-      - run: docker manifest push codingbadly/multi-arch-fuff:latest
+#  build_manifest:
+#    machine:
+#      image: ubuntu-2004:current
+#    resource_class: small
+#    steps:
+#      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+#      - run: docker manifest create codingbadly/multi-arch-fuff:latest >
+#          --amend codingbadly/multi-arch-fuff:arm64
+#          --amend codingbadly/multi-arch-fuff:amd64
+#      - run: docker manifest push codingbadly/multi-arch-fuff:latest
 
 workflows:
   build_all:
@@ -59,9 +53,9 @@ workflows:
       - build_amd64:
           context:
             - docker-hub
-      - build_manifest:
-          context:
-            - docker-hub
-          requires:
-            - build_arm64
-            - build_amd64
+#      - build_manifest:
+#          context:
+#            - docker-hub
+#          requires:
+#            - build_arm64
+#            - build_amd64
