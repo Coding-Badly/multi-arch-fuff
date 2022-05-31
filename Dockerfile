@@ -64,39 +64,39 @@ ENV RUSTUP_HOME=/usr/local/rustup \
     PATH=/usr/local/cargo/bin:/cargo/bin:$PATH \
     RUST_VERSION=1.58.1
 
-RUN curl -fsSL https://sh.rustup.rs | sh -s -- -y \
-	--default-toolchain $RUST_VERSION \
-	--no-modify-path \
-	--component rustfmt llvm-tools-preview \
-  && rustup toolchain install nightly --profile=minimal --component rustfmt \
-  && rustup target add $(uname -m)-unknown-linux-musl \
-  && rustup +nightly target add $(uname -m)-unknown-linux-musl \
-  && mkdir /.cargo \
-  && echo "[build]\ntarget = \"$(uname -m)-unknown-linux-musl\"" > /.cargo/config
-
-ENV CARGO_HOME="/cargo"
-
-RUN cargo +nightly install grcov --version 0.8.4 # https://github.com/mozilla/grcov/issues/763
-
-ENV GOPATH=/home/ubuntu/go
-
-ENV OLDGO_VERSION=1.13.8
-
-ENV OLDGO=${GOPATH}/bin/go${OLDGO_VERSION}
-
-RUN go install golang.org/dl/go${OLDGO_VERSION}@latest \
-  && $OLDGO download
-
-RUN export NEWGO=$(which go) \
-  && mv $NEWGO $NEWGO-set-aside \
-  && ln -s $OLDGO $NEWGO \
-  && go get -d github.com/opencontainers/image-tools/cmd/oci-image-tool \
-  && cd $GOPATH/src/github.com/opencontainers/image-tools/ \
-  && make all \
-  && sudo make install \
-  && go get -d github.com/opencontainers/runtime-tools/cmd/oci-runtime-tool \
-  && cd $GOPATH/src/github.com/opencontainers/runtime-tools/ \
-  && make all \
-  && sudo make install \
-  && rm $NEWGO \
-  && mv $NEWGO-set-aside $NEWGO
+#RUN curl -fsSL https://sh.rustup.rs | sh -s -- -y \
+#	--default-toolchain $RUST_VERSION \
+#	--no-modify-path \
+#	--component rustfmt llvm-tools-preview \
+#  && rustup toolchain install nightly --profile=minimal --component rustfmt \
+#  && rustup target add $(uname -m)-unknown-linux-musl \
+#  && rustup +nightly target add $(uname -m)-unknown-linux-musl \
+#  && mkdir /.cargo \
+#  && echo "[build]\ntarget = \"$(uname -m)-unknown-linux-musl\"" > /.cargo/config
+#
+#ENV CARGO_HOME="/cargo"
+#
+#RUN cargo +nightly install grcov --version 0.8.4 # https://github.com/mozilla/grcov/issues/763
+#
+#ENV GOPATH=/home/ubuntu/go
+#
+#ENV OLDGO_VERSION=1.13.8
+#
+#ENV OLDGO=${GOPATH}/bin/go${OLDGO_VERSION}
+#
+#RUN go install golang.org/dl/go${OLDGO_VERSION}@latest \
+#  && $OLDGO download
+#
+#RUN export NEWGO=$(which go) \
+#  && mv $NEWGO $NEWGO-set-aside \
+#  && ln -s $OLDGO $NEWGO \
+#  && go get -d github.com/opencontainers/image-tools/cmd/oci-image-tool \
+#  && cd $GOPATH/src/github.com/opencontainers/image-tools/ \
+#  && make all \
+#  && sudo make install \
+#  && go get -d github.com/opencontainers/runtime-tools/cmd/oci-runtime-tool \
+#  && cd $GOPATH/src/github.com/opencontainers/runtime-tools/ \
+#  && make all \
+#  && sudo make install \
+#  && rm $NEWGO \
+#  && mv $NEWGO-set-aside $NEWGO
