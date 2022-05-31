@@ -9,7 +9,7 @@ yaml_anchors:
       - run: docker image inspect multi-arch-fuff-stage | grep "Architecture"
       - run: echo "export TARGET_ARCHITECTURE=$(dpkg --print-architecture)" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${TARGET_ARCHITECTURE}
-      - run: echo "export RUST_VERSION=$(docker run -it --rm --entrypoint /bin/sh multi-arch-fuff-stage -c 'printf $RUST_VERSION')" >> $BASH_ENV
+      - run: echo "export RUST_VERSION=$(docker run -it --rm --entrypoint /bin/sh multi-arch-fuff-stage -c 'printf $RUST_VERSION' | tr -d '\000')" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${RUST_VERSION}
       - run: echo "export DOCKER_IMAGE_1=codingbadly/multi-arch-fuff:${RUST_VERSION}-${TARGET_ARCHITECTURE}" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${DOCKER_IMAGE_1}
