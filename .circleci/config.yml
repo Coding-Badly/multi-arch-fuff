@@ -5,12 +5,14 @@ yaml_anchors:
     steps:
       - checkout
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
-      - run: export DOCKER_ARCHITECTURE=$(dpkg --print-architecture)
       - run: echo "export DOCKER_ARCHITECTURE=$(dpkg --print-architecture)" >> $BASH_ENV
       - run: printf ${DOCKER_ARCHITECTURE}
       - run: echo "export DOCKER_IMAGE=codingbadly/multi-arch-fuff:${DOCKER_ARCHITECTURE}" >> $BASH_ENV
+      - run: printf ${DOCKER_IMAGE}
       - run: docker build --force-rm -t codingbadly/multi-arch-fuff:$(dpkg --print-architecture) .
       - run: docker image inspect codingbadly/multi-arch-fuff:$(dpkg --print-architecture) | grep "Architecture"
+      - run: echo "export DOCKER_TAG=$(docker run -it --rm --entrypoint /bin/sh codingbadly/multi-arch-fuff -c 'printf $RUST_VERSION')" >> $BASH_ENV
+      - run: printf ${DOCKER_TAG}
       - run: docker push codingbadly/multi-arch-fuff:$(dpkg --print-architecture)
 
 jobs:
