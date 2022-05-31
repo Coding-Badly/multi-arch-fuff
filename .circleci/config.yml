@@ -6,7 +6,7 @@ yaml_anchors:
       - checkout
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
       - run: export DOCKER_ARCHITECTURE=$(dpkg --print-architecture)
-      - runc echo "export DOCKER_ARCHITECTURE=$(dpkg --print-architecture)" >> $BASH_ENV
+      - run: echo "export DOCKER_ARCHITECTURE=$(dpkg --print-architecture)" >> $BASH_ENV
       - run: printf ${DOCKER_ARCHITECTURE}
       - run: echo "export DOCKER_IMAGE=codingbadly/multi-arch-fuff:${DOCKER_ARCHITECTURE}" >> $BASH_ENV
       - run: docker build --force-rm -t codingbadly/multi-arch-fuff:$(dpkg --print-architecture) .
