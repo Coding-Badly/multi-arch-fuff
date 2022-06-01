@@ -24,11 +24,10 @@ yaml_anchors:
       - run: docker push ${DOCKER_IMAGE_2}
       # Save the Rust version for the downstream step
       - run: mkdir -p workspace
-      - run: printf "%s" ${RUST_VERSION} > workspace/${TARGET_ARCHITECTURE}
+      - run: printf "export RUST_VERSION=\"%s\"\n" ${RUST_VERSION} > workspace/${TARGET_ARCHITECTURE}
       - persist_to_workspace:
           root: workspace
           paths: "*"
-
   context: &context
     context:
       - docker-hub
@@ -54,13 +53,16 @@ jobs:
       - attach_workspace:
           at: workspace
       - run: ls -la workspace
-      - run: cat workspace/AMD64
-      - run: cat workspace/ARM64
-#      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
-#      - run: docker manifest create codingbadly/multi-arch-fuff:latest >
-#          --amend codingbadly/multi-arch-fuff:arm64
-#          --amend codingbadly/multi-arch-fuff:amd64
-#      - run: docker manifest push codingbadly/multi-arch-fuff:latest
+      - run: cat workspace/amd64
+      - run: cat workspace/arm64
+      - run: cmp workspace/amd64 workspace/arm64
+      - run: cat workspace/amd64 >> $BASH_ENV
+      - run: printf "\n>%s<\n\n" ${RUST_VERSION}
+      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+      - run: docker manifest create codingbadly/multi-arch-fuff:${RUST_VERSION} >
+          --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-amd64
+          --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-arm64
+      - run: docker manifest push codingbadly/multi-arch-fuff:${RUST_VERSION}
 
 workflows:
   build_all:
