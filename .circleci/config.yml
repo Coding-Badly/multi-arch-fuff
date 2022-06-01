@@ -1,5 +1,15 @@
 version: 2.1
 
+executors:
+  amd64:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: medium
+  arm64:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: arm.medium
+
 yaml_anchors:
   build_one: &build_one
     steps:
@@ -74,15 +84,27 @@ jobs:
           --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-arm64
       - run: docker manifest push codingbadly/multi-arch-fuff:latest
 
+  build_each:
+    parameters:
+      platform:
+        type: executor
+    executor: << parameters.platform >>
+    steps:
+      - run: dpkg --print-architecture
+
 workflows:
   build_all:
     jobs:
-      - build_arm64:
-          <<: *context
-      - build_amd64:
-          <<: *context
-      - build_manifest:
-          <<: *context
-          requires:
-            - build_arm64
-            - build_amd64
+      - build_each:
+          matrix:
+            parameters:
+              platform: [amd64, arm64]
+#      - build_arm64:
+#          <<: *context
+#      - build_amd64:
+#          <<: *context
+#      - build_manifest:
+#          <<: *context
+#          requires:
+#            - build_arm64
+#            - build_amd64
