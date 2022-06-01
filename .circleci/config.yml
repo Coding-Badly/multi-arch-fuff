@@ -27,7 +27,7 @@ jobs:
       # the output.  Those NULLs are converted to ^@ (presumably by Bash).  The tr command deletes
       # the errant garbage.  The problem occurs nowhere else.  Methinks the CircleCI runner has a
       # buffering bug.
-      - run: echo "export RUST_VERSION=$(docker run -it --rm --entrypoint /bin/sh multi-arch-fuff-stage -c 'printf $RUST_VERSION' | tr -d '^@')" >> $BASH_ENV
+      - run: echo "export RUST_VERSION=$(docker run --rm --entrypoint /bin/sh multi-arch-fuff-stage -c 'printf $RUST_VERSION' | tr -d '^@')" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${RUST_VERSION}
       # We're going to tag latest and a version specific image
       - run: echo "export DOCKER_IMAGE_1=codingbadly/multi-arch-fuff:${RUST_VERSION}-${TARGET_ARCHITECTURE}" >> $BASH_ENV
