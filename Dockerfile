@@ -9,6 +9,9 @@ RUN apt-get update \
     ca-certificates \
     curl \
     wget \
+    iproute2 \
+    iputils-ping \
+    net-tools \
   && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y tzdata \
   && apt-get install -y software-properties-common \
   && apt-get update \
@@ -36,19 +39,14 @@ RUN apt-get update \
 # Do we need all that?  We'll assume "no".
 #    cmake \
 #    cron \
-#    curl \
 #    file \
 #    git \
 #    g++ \
-#    iproute2 \
 #    man \
 #    sudo \
 #    screen \
 #    dnsutils \
-#    iputils-ping \
-#    net-tools \
 #    vim \
-#    ca-certificates \
 #    xz-utils \
 #    pkg-config \
 #    apt-file \
