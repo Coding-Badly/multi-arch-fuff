@@ -48,7 +48,7 @@ jobs:
   build_manifest:
     machine:
       image: ubuntu-2004:current
-    resource_class: small
+    resource_class: medium
     steps:
       - attach_workspace:
           at: workspace
@@ -63,6 +63,10 @@ jobs:
           --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-amd64
           --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-arm64
       - run: docker manifest push codingbadly/multi-arch-fuff:${RUST_VERSION}
+      - run: docker manifest create codingbadly/multi-arch-fuff:latest >
+          --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-amd64
+          --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-arm64
+      - run: docker manifest push codingbadly/multi-arch-fuff:latest
 
 workflows:
   build_all:
