@@ -6,20 +6,26 @@ yaml_anchors:
       - checkout
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
       - run: docker build --force-rm -t multi-arch-fuff-stage .
+      # Show the human what we built
       - run: docker image inspect multi-arch-fuff-stage | grep "Architecture"
+      # Show the human what we were supposed to build
       - run: echo "export TARGET_ARCHITECTURE=$(dpkg --print-architecture)" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${TARGET_ARCHITECTURE}
       # For some reason when the following is run by the CircleCI runner two NULLs are prefixed to
       # the output.  Those NULLs are converted to ^@ (presumably by Bash).  The tr command deletes
-      # the errant garbage.
+      # the errant garbage.  The problem occurs nowhere else.  Methinks the CircleCI runner has a
+      # buffering bug.
       - run: echo "export RUST_VERSION=$(docker run -it --rm --entrypoint /bin/sh multi-arch-fuff-stage -c 'printf $RUST_VERSION' | tr -d '^@')" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${RUST_VERSION}
+      # We're going to tag latest and a version specific image
       - run: echo "export DOCKER_IMAGE_1=codingbadly/multi-arch-fuff:${RUST_VERSION}-${TARGET_ARCHITECTURE}" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${DOCKER_IMAGE_1}
       - run: echo "export DOCKER_IMAGE_2=codingbadly/multi-arch-fuff:latest-${TARGET_ARCHITECTURE}" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${DOCKER_IMAGE_2}
+      # Do the tagging
       - run: docker tag multi-arch-fuff-stage ${DOCKER_IMAGE_1}
       - run: docker tag multi-arch-fuff-stage ${DOCKER_IMAGE_2}
+      # Push it
       - run: docker push ${DOCKER_IMAGE_1}
       - run: docker push ${DOCKER_IMAGE_2}
       # Save the Rust version for the downstream step
@@ -52,12 +58,12 @@ jobs:
     steps:
       - attach_workspace:
           at: workspace
-      - run: ls -la workspace
-      - run: cat workspace/amd64
-      - run: cat workspace/arm64
+      # The two upstream steps had better have built exactly the same thing
       - run: cmp workspace/amd64 workspace/arm64
+      # Make the Rust version available as an environment variable (and show the human)
       - run: cat workspace/amd64 >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${RUST_VERSION}
+      # Create then push the two manifests
       - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
       - run: docker manifest create codingbadly/multi-arch-fuff:${RUST_VERSION} >
           --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-amd64
