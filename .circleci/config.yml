@@ -27,7 +27,8 @@ yaml_anchors:
       - run: printf "%s" ${RUST_VERSION} > workspace/${TARGET_ARCHITECTURE}
       - persist_to_workspace:
           root: workspace
-          paths: *
+          paths: "*"
+
   context: &context
     context:
       - docker-hub
