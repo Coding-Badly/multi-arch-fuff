@@ -49,6 +49,44 @@ yaml_anchors:
       - docker-hub
 
 jobs:
+  build_for:
+    parameters:
+      platform:
+        type: executor
+    executor: << parameters.platform >>
+    steps:
+      - checkout
+      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+      - run: docker build --force-rm -t multi-arch-fuff-stage .
+      # Show the human what we built
+      - run: docker image inspect multi-arch-fuff-stage | grep "Architecture"
+      # Show the human what we were supposed to build
+      - run: echo "export TARGET_ARCHITECTURE=$(dpkg --print-architecture)" >> $BASH_ENV
+      - run: printf "\n>%s<\n\n" ${TARGET_ARCHITECTURE}
+      # For some reason when the following is run by the CircleCI runner two NULLs are prefixed to
+      # the output.  Those NULLs are converted to ^@ (presumably by Bash).  The tr command deletes
+      # the errant garbage.  The problem occurs nowhere else.  Methinks the CircleCI runner has a
+      # buffering bug.
+      - run: echo "export RUST_VERSION=$(docker run -it --rm --entrypoint /bin/sh multi-arch-fuff-stage -c 'printf $RUST_VERSION' | tr -d '^@')" >> $BASH_ENV
+      - run: printf "\n>%s<\n\n" ${RUST_VERSION}
+      # We're going to tag latest and a version specific image
+      - run: echo "export DOCKER_IMAGE_1=codingbadly/multi-arch-fuff:${RUST_VERSION}-${TARGET_ARCHITECTURE}" >> $BASH_ENV
+      - run: printf "\n>%s<\n\n" ${DOCKER_IMAGE_1}
+      - run: echo "export DOCKER_IMAGE_2=codingbadly/multi-arch-fuff:latest-${TARGET_ARCHITECTURE}" >> $BASH_ENV
+      - run: printf "\n>%s<\n\n" ${DOCKER_IMAGE_2}
+      # Do the tagging
+      - run: docker tag multi-arch-fuff-stage ${DOCKER_IMAGE_1}
+      - run: docker tag multi-arch-fuff-stage ${DOCKER_IMAGE_2}
+      # Push it
+      - run: docker push ${DOCKER_IMAGE_1}
+      - run: docker push ${DOCKER_IMAGE_2}
+      # Save the Rust version for the downstream step
+      - run: mkdir -p workspace
+      - run: printf "export RUST_VERSION=\"%s\"\n" ${RUST_VERSION} > workspace/${TARGET_ARCHITECTURE}
+      - persist_to_workspace:
+          root: workspace
+          paths: "*"
+
   build_arm64:
     machine:
       image: ubuntu-2004:current
@@ -84,21 +122,19 @@ jobs:
           --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-arm64
       - run: docker manifest push codingbadly/multi-arch-fuff:latest
 
-  build_each:
-    parameters:
-      platform:
-        type: executor
-    executor: << parameters.platform >>
-    steps:
-      - run: dpkg --print-architecture
-
 workflows:
   build_all:
     jobs:
-      - build_each:
+      - build_for:
+          <<: *context
           matrix:
             parameters:
               platform: [amd64, arm64]
+      - build_manifest:
+          <<: *context
+          requires:
+            - build_for
+
 #      - build_arm64:
 #          <<: *context
 #      - build_amd64:
