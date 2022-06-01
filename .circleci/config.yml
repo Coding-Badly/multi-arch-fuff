@@ -1,5 +1,13 @@
 version: 2.1
 
+yaml_anchors:
+  # This snippet requires that the docker-hub-login context is added to the workflow
+  docker_hub_login: &docker_hub_login
+    run:
+      name: Login to Docker Hub
+      command: |
+        echo "$GREMLIN_DOCKER_PASSWORD" | docker login -u="$GREMLIN_DOCKER_USERNAME" --password-stdin
+
 jobs:
   build_for:
     parameters:
@@ -8,7 +16,7 @@ jobs:
     executor: << parameters.platform >>
     steps:
       - checkout
-      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+      - *docker_hub_login
       - run: docker build --force-rm -t multi-arch-fuff-stage .
       # Show the human what we built
       - run: docker image inspect multi-arch-fuff-stage | grep "Architecture"
@@ -52,7 +60,7 @@ jobs:
       - run: cat workspace/amd64 >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${RUST_VERSION}
       # Create then push the two manifests
-      - run: docker login -u=$DOCKER_HUB_USERNAME -p=$DOCKER_HUB_PASSWORD
+      - *docker_hub_login
       - run: docker manifest create codingbadly/multi-arch-fuff:${RUST_VERSION} >
           --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-amd64
           --amend codingbadly/multi-arch-fuff:${RUST_VERSION}-arm64
@@ -76,13 +84,11 @@ workflows:
   build_all:
     jobs:
       - build_for:
-          context:
-            - docker-hub
+          context: docker-hub-login
           matrix:
             parameters:
               platform: [amd64, arm64]
       - build_manifest:
-          context:
-            - docker-hub
+          context: docker-hub-login
           requires:
             - build_for
