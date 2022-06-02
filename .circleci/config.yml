@@ -73,11 +73,11 @@ jobs:
 executors:
   amd64:
     machine:
-      image: ubuntu-2204:2022.04.1
+      image: ubuntu-2204:current
     resource_class: medium
   arm64:
     machine:
-      image: ubuntu-2204:2022.04.1
+      image: ubuntu-2204:current
     resource_class: arm.medium
 
 workflows:
