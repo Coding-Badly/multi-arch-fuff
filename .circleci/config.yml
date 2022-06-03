@@ -6,7 +6,7 @@ yaml_anchors:
     run:
       name: Login to Docker Hub
       command: |
-        echo "$GREMLIN_DOCKER_PASSWORD" | docker login -u="$GREMLIN_DOCKER_USERNAME" --password-stdin
+        echo "$DOCKER_PASSWORD" | docker login -u="$DOCKER_LOGIN" --password-stdin
 
 jobs:
   build_for:
@@ -17,9 +17,9 @@ jobs:
     steps:
       - checkout
       - *docker_hub_login
-      - run: docker build --force-rm -t multi-arch-fuff-stage .
+      - run: docker build --force-rm -t stage .
       # Show the human what we built
-      - run: docker image inspect multi-arch-fuff-stage | grep "Architecture"
+      - run: docker image inspect stage | grep "Architecture"
       # Show the human what we were supposed to build
       - run: echo "export TARGET_ARCHITECTURE=$(dpkg --print-architecture)" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${TARGET_ARCHITECTURE}
@@ -27,7 +27,7 @@ jobs:
       # the output.  Those NULLs are converted to ^@ (presumably by Bash).  The tr command deletes
       # the errant garbage.  The problem occurs nowhere else.  Methinks the CircleCI runner has a
       # buffering bug.
-      - run: echo "export RUST_VERSION=$(docker run --rm --entrypoint /bin/sh multi-arch-fuff-stage -c 'printf $RUST_VERSION' | tr -d '^@')" >> $BASH_ENV
+      - run: echo "export RUST_VERSION=$(docker run --rm --entrypoint /bin/sh stage -c 'printf $RUST_VERSION' | tr -d '^@')" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${RUST_VERSION}
       # We're going to tag latest and a version specific image
       - run: echo "export DOCKER_IMAGE_1=codingbadly/multi-arch-fuff:${RUST_VERSION}-${TARGET_ARCHITECTURE}" >> $BASH_ENV
@@ -35,8 +35,8 @@ jobs:
       - run: echo "export DOCKER_IMAGE_2=codingbadly/multi-arch-fuff:latest-${TARGET_ARCHITECTURE}" >> $BASH_ENV
       - run: printf "\n>%s<\n\n" ${DOCKER_IMAGE_2}
       # Do the tagging
-      - run: docker tag multi-arch-fuff-stage ${DOCKER_IMAGE_1}
-      - run: docker tag multi-arch-fuff-stage ${DOCKER_IMAGE_2}
+      - run: docker tag stage ${DOCKER_IMAGE_1}
+      - run: docker tag stage ${DOCKER_IMAGE_2}
       # Push it
       - run: docker push ${DOCKER_IMAGE_1}
       - run: docker push ${DOCKER_IMAGE_2}
@@ -84,11 +84,17 @@ workflows:
   build_all:
     jobs:
       - build_for:
-          context: docker-hub-login
+          filters:
+            branches:
+              only: main
           matrix:
             parameters:
               platform: [amd64, arm64]
-      - build_manifest:
           context: docker-hub-login
+      - build_manifest:
+          filters:
+            branches:
+              only: main
           requires:
             - build_for
+          context: docker-hub-login
