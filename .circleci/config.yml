@@ -84,17 +84,17 @@ workflows:
   build_all:
     jobs:
       - build_for:
-          filters:
-            branches:
-              only: main
+          context: docker-hub-login
           matrix:
             parameters:
               platform: [amd64, arm64]
-          context: docker-hub-login
-      - build_manifest:
           filters:
             branches:
-              only: main
+              only: [main]
+      - build_manifest:
+          context: docker-hub-login
           requires:
             - build_for
-          context: docker-hub-login
+          filters:
+            branches:
+              only: [main]
